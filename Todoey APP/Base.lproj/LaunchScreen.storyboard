@@ -44,7 +44,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Splash screen image" width="329" height="336"/>
+        <image name="Splash screen image" width="329" height="336.33334350585938"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
