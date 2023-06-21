@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <elements/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F66" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="SubTasks" representedClassName="SubTasks" syncable="YES" codeGenerationType="class">
+        <attribute name="isChecked" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="subTaskDescription" attributeType="String"/>
+        <relationship name="parentTask" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskTittles" inverseName="containedTask" inverseEntity="TaskTittles"/>
+    </entity>
+    <entity name="TaskTittles" representedClassName="TaskTittles" syncable="YES" codeGenerationType="class">
+        <attribute name="colorAssigned" optional="YES" attributeType="String"/>
+        <attribute name="tittleOfTask" attributeType="String"/>
+        <relationship name="containedTask" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="SubTasks" inverseName="parentTask" inverseEntity="SubTasks"/>
+    </entity>
 </model>
