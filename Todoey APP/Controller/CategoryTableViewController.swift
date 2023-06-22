@@ -4,22 +4,28 @@
 //
 //  Created by Adil Anjum Khan on 20/06/2023.
 //
-
+import SwipeCellKit
 import UIKit
 import CoreData
 
-class CategoryTableViewController: UITableViewController {
-
+class CategoryTableViewController: SwipeToDelete {
+    
     @IBOutlet weak var addButton: UIBarButtonItem!
     var myTittles=[TaskTittles]()
     var selectedRow:Int?
+    var alertController: UIAlertController?
     let context=((UIApplication.shared.delegate) as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         changeNavBarColor()
         loadUserTasksFromDB()
-        
+    }
+    
+    //MARK:- Dismissing keyboard and allerts on tap gestures
+    
+    @objc func dismissOnTapOutside(){
+        self.dismiss(animated: true, completion: nil)
     }
     
     //MARK:- Changing Navbar Configuration
@@ -61,7 +67,8 @@ class CategoryTableViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reusable cell",for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "reusable cell",for: indexPath) as! SwipeTableViewCell
+        cell.delegate=self
         cell.textLabel?.text = myTittles[indexPath.row].tittleOfTask
         return cell
     }
@@ -69,23 +76,58 @@ class CategoryTableViewController: UITableViewController {
     // MARK: Adding add button functionality
     
     @IBAction func addTittleToList(_ sender: UIBarButtonItem) {
-        var txtFieldOfAddButton:UITextField?
-        let allert = UIAlertController(title: "Add Task", message: "Add tittle referring sub tasks", preferredStyle: .alert)
         
-        allert.addTextField { txtField in
-            txtField.placeholder="Enter task tittle..."
-           txtFieldOfAddButton=txtField
+        showAllert(title: "Add Task", message: "Add tittle task",choice: 1)
+    }
+    
+    fileprivate func addRequest(_ txtField:UITextField) {
+        if(txtField.text!.trimmingCharacters(in: .whitespaces)=="")
+        {
+            self.presentingViewController?.dismiss(animated: false, completion: nil)
+            showAllert(title: "Add Task", message: "Tittle task shouuld be assigned valid name",choice: 1,placeholder: "Enter a valid name for task",color: UIColor.red)
+            
         }
-        let action=UIAlertAction(title: "Add", style: .default) { confirmationButton in
+        else
+        {
             print("Requested to add...")
             let newTaskHeader=TaskTittles(context: self.context)
-            newTaskHeader.tittleOfTask = txtFieldOfAddButton?.text!
+            newTaskHeader.tittleOfTask = txtField.text!
             self.myTittles.append(newTaskHeader)
             self.saveContext()
             self.tableView.reloadData()
         }
+    }
+    
+    private func showAllert(title:String,message:String,choice:Int,indexPath:IndexPath? = nil,placeholder:String = "Enter task tittle...", color:UIColor=UIColor.gray)
+    {
+        var txtFieldOfAddButton:UITextField?
+        let allert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        allert.addTextField { txtField in
+            txtField.placeholder="Enter task tittle..."
+            let attributes: [NSAttributedString.Key: Any] = [
+                .foregroundColor: color, // Set the desired color
+                .font: UIFont.systemFont(ofSize: 16) // Set the desired font
+            ]
+            txtField.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: attributes)
+            txtFieldOfAddButton=txtField
+        }
+        let action=UIAlertAction(title: choice==1 ? "Add" : "Edit", style: .default) { confirmationButton in
+            if(choice==1)
+            {
+                self.addRequest(txtFieldOfAddButton!)
+            }
+            else
+            {
+                self.editTittleTask(txtFieldOfAddButton!,indexPath!)
+            }
+        }
         allert.addAction(action)
-        present(allert, animated: true)
+        
+        self.present(allert, animated: true, completion:{
+            allert.view.superview?.isUserInteractionEnabled = true
+            allert.view.superview?.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.dismissOnTapOutside)))
+        })
     }
     
     private func saveContext()
@@ -123,7 +165,32 @@ class CategoryTableViewController: UITableViewController {
             
         }
     }
-
-
+    
+    //Adding delete Action
+    override func performDeleteAction(indexPath: IndexPath) {
+        
+        context.delete(self.myTittles[indexPath.row])
+        self.myTittles.remove(at: indexPath.row)
+        saveContext()
+    }
+    
+    //Adding edit Action
+    override func performEditAction(indexPath: IndexPath) {
+        showAllert(title: "Edit Tittle", message: "Add the new tittle",choice: 2, indexPath: indexPath)
+    }
+    
+    fileprivate func editTittleTask(_ txtField:UITextField,_ indexPath: IndexPath) {
+        if(txtField.text!.trimmingCharacters(in: .whitespaces)=="")
+        {
+            self.presentingViewController?.dismiss(animated: false, completion: nil)
+            showAllert(title: "Add Task", message: "Tittle task shouuld be assigned valid name",choice: 2,indexPath: indexPath,placeholder: "Enter a valid name for task",color: UIColor.red)
+        }
+        else
+        {
+            myTittles[indexPath.row].tittleOfTask=txtField.text!
+            self.saveContext()
+            self.tableView.reloadData()
+        }
+        
+    }
 }
-
